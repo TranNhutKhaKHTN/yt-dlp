@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tải đoạn video YouTube</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 520px;
+      margin: 48px auto;
+      padding: 0 16px;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 1.35rem; margin-bottom: 8px; }
+    p { color: #555; font-size: 0.9rem; margin-bottom: 24px; }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #ff0000;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .hint { font-size: 0.8rem; color: #777; margin-top: -10px; margin-bottom: 16px; }
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .status.error { display: block; background: #fde8e8; color: #b00020; }
+    .status.loading { display: block; background: #eef4ff; color: #1a4fb0; }
+    .status.success { display: block; background: #e8f5e9; color: #1b5e20; }
+  </style>
+</head>
+<body>
+  <h1>Tải đoạn video YouTube</h1>
+  <p>Nhập link video, thời gian bắt đầu và kết thúc để tải một đoạn ngắn về máy.</p>
+
+  <form id="form">
+    <label for="url">Link video YouTube</label>
+    <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
+
+    <div class="row">
+      <div>
+        <label for="startTime">Bắt đầu</label>
+        <input id="startTime" type="text" placeholder="0:30" required>
+      </div>
+      <div>
+        <label for="endTime">Kết thúc</label>
+        <input id="endTime" type="text" placeholder="1:30" required>
+      </div>
+    </div>
+    <p class="hint">Định dạng: giây (90) hoặc phút:giây (1:30)</p>
+
+    <button type="submit" id="submitBtn">Tải video</button>
+  </form>
+
+  <div id="status" class="status"></div>
+
+  <script>
+    const form = document.getElementById('form');
+    const statusEl = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function setStatus(type, message) {
+      statusEl.className = 'status ' + type;
+      statusEl.textContent = message;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      setStatus('loading', 'Đang tải video, vui lòng đợi...');
+
+      try {
+        const res = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: document.getElementById('url').value,
+            startTime: document.getElementById('startTime').value,
+            endTime: document.getElementById('endTime').value,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Tải video thất bại');
+        }
+
+        const blob = await res.blob();
+        const disposition = res.headers.get('Content-Disposition') || '';
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        const filename = match ? match[1] : 'video.mp4';
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+
+        setStatus('success', 'Tải xong! File đã được lưu về máy.');
+      } catch (err) {
+        setStatus('error', err.message);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
