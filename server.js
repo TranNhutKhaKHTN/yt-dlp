@@ -22,7 +22,7 @@ function cleanupJob(jobDir) {
 }
 
 app.post('/api/download', async (req, res) => {
-  const { url, startTime, endTime, resolution = 'best' } = req.body;
+  const { url, startTime, endTime, resolution = 'best', fastMode = false } = req.body;
 
   if (!url || !startTime || !endTime) {
     return res.status(400).json({ error: 'Vui lòng nhập đầy đủ link và thời gian' });
@@ -51,6 +51,7 @@ app.post('/api/download', async (req, res) => {
       jobDir,
       null,
       validatedResolution,
+      Boolean(fastMode),
     );
 
     const videoFile = path.basename(filePath);
@@ -69,7 +70,7 @@ app.post('/api/download', async (req, res) => {
 });
 
 app.post('/api/download-batch', async (req, res) => {
-  const { url, segments, resolution = 'best' } = req.body;
+  const { url, segments, resolution = 'best', fastMode = false } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: 'Vui lòng nhập link video' });
@@ -89,7 +90,7 @@ app.post('/api/download-batch', async (req, res) => {
   fs.mkdirSync(jobDir, { recursive: true });
 
   try {
-    const files = await downloadMultipleSegments(url, validatedSegments, jobDir, validatedResolution);
+    const files = await downloadMultipleSegments(url, validatedSegments, jobDir, validatedResolution, Boolean(fastMode));
 
     if (files.length === 1) {
       return res.download(files[0].path, files[0].name, (err) => {

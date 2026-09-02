@@ -102,6 +102,21 @@
       margin-bottom: 4px;
     }
     .hint { font-size: 0.8rem; color: #777; margin-top: -4px; margin-bottom: 16px; }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+    .checkbox-row label {
+      margin: 0;
+      font-weight: 500;
+      cursor: pointer;
+    }
     .status {
       margin-top: 16px;
       padding: 12px;
@@ -128,9 +143,14 @@
       <option value="best">Cao nhất (1080p+)</option>
       <option value="1080">1080p</option>
       <option value="720">720p</option>
-      <option value="480">480p</option>
+      <option value="480" selected>480p</option>
       <option value="360">360p</option>
     </select>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="fastMode" checked>
+      <label for="fastMode">Tải nhanh (~15s/phút, giới hạn 480p, tải song song)</label>
+    </div>
 
     <div class="segments-header">
       <label>Phân đoạn</label>
@@ -223,6 +243,7 @@
             url,
             segments,
             resolution: document.getElementById('resolution').value,
+            fastMode: document.getElementById('fastMode').checked,
           }),
         });
 
