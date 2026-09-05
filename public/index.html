@@ -37,6 +37,17 @@
       margin-bottom: 16px;
       background: #fff;
     }
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: ui-monospace, monospace;
+      min-height: 100px;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr auto;
@@ -82,6 +93,27 @@
       background: #fde8e8;
       color: #b00020;
       border-color: #f5c2c2;
+    }
+    .ai-section {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 14px;
+      margin: 20px 0;
+      background: #fafafa;
+    }
+    .ai-section h2 {
+      font-size: 0.95rem;
+      margin: 0 0 10px;
+    }
+    .ai-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .ai-actions button {
+      width: auto;
+      padding: 8px 12px;
+      font-size: 0.85rem;
     }
     .segments-header {
       display: flex;
@@ -138,6 +170,16 @@
     <label for="url">Link video YouTube</label>
     <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
 
+    <div class="ai-section">
+      <h2>AI: Prompt &amp; Import</h2>
+      <p class="hint" style="margin-top:0">1. Sao chép prompt → 2. Dán vào AI kèm link → 3. Paste JSON trả về → Import</p>
+      <div class="ai-actions">
+        <button type="button" class="secondary" id="copyPromptBtn">Sao chép prompt mẫu</button>
+        <button type="button" class="secondary" id="importJsonBtn">Import JSON</button>
+      </div>
+      <textarea id="jsonImport" placeholder='Dán JSON từ AI vào đây...'></textarea>
+    </div>
+
     <label for="resolution">Độ phân giải</label>
     <select id="resolution">
       <option value="best">Cao nhất (1080p+)</option>
@@ -164,12 +206,17 @@
 
   <div id="status" class="status"></div>
 
+  <script src="prompt.js"></script>
+  <script src="import.js"></script>
   <script>
     const form = document.getElementById('form');
     const statusEl = document.getElementById('status');
     const submitBtn = document.getElementById('submitBtn');
     const segmentsEl = document.getElementById('segments');
     const addSegmentBtn = document.getElementById('addSegmentBtn');
+    const copyPromptBtn = document.getElementById('copyPromptBtn');
+    const importJsonBtn = document.getElementById('importJsonBtn');
+    const jsonImportEl = document.getElementById('jsonImport');
 
     let segmentCount = 0;
 
@@ -178,15 +225,22 @@
       statusEl.textContent = message;
     }
 
-    function createSegmentRow(start = '', end = '') {
+    function formatStartLabel(index, title) {
+      const base = `Phân đoạn ${index + 1}`;
+      return title ? `${base} — ${title}` : `${base} — Bắt đầu`;
+    }
+
+    function createSegmentRow(start = '', end = '', title = '') {
       segmentCount += 1;
       const id = segmentCount;
       const row = document.createElement('div');
       row.className = 'row';
       row.dataset.id = id;
+      row.dataset.title = title;
+      const labelIndex = segmentsEl.children.length;
       row.innerHTML = `
         <div class="field">
-          <div class="segment-label">Phân đoạn ${id} — Bắt đầu</div>
+          <div class="segment-label start-label">${formatStartLabel(labelIndex, title)}</div>
           <input type="text" class="startTime" placeholder="0:30" value="${start}" required>
         </div>
         <div class="field">
@@ -205,7 +259,7 @@
 
     function updateSegmentLabels() {
       [...segmentsEl.querySelectorAll('.row')].forEach((row, i) => {
-        row.querySelector('.segment-label').textContent = `Phân đoạn ${i + 1} — Bắt đầu`;
+        row.querySelector('.start-label').textContent = formatStartLabel(i, row.dataset.title || '');
       });
     }
 
@@ -223,6 +277,42 @@
       a.click();
       URL.revokeObjectURL(a.href);
     }
+
+    copyPromptBtn.addEventListener('click', async () => {
+      const url = document.getElementById('url').value;
+      const prompt = buildPromptTemplate(url);
+      try {
+        await navigator.clipboard.writeText(prompt);
+        setStatus('success', 'Đã sao chép prompt mẫu vào clipboard.');
+      } catch {
+        setStatus('error', 'Không thể sao chép. Hãy copy thủ công.');
+      }
+    });
+
+    importJsonBtn.addEventListener('click', () => {
+      const text = jsonImportEl.value.trim();
+      if (!text) {
+        setStatus('error', 'Chưa có JSON để import.');
+        return;
+      }
+
+      try {
+        const raw = parseAiJson(text);
+        const data = validateImport(raw);
+        segmentCount = 0;
+        applyImport(data, {
+          urlInput: document.getElementById('url'),
+          resolutionSelect: document.getElementById('resolution'),
+          fastModeCheckbox: document.getElementById('fastMode'),
+          segmentsEl,
+          createSegmentRow,
+        });
+        segmentCount = segmentsEl.children.length;
+        setStatus('success', `Import thành công ${data.segments.length} phân đoạn.`);
+      } catch (err) {
+        setStatus('error', err.message);
+      }
+    });
 
     addSegmentBtn.addEventListener('click', () => createSegmentRow());
 
