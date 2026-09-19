@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cào kênh / playlist YouTube</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 16px;
+      color: #1a1a1a;
+    }
+    nav {
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+    nav a {
+      color: #1a4fb0;
+      text-decoration: none;
+    }
+    nav a:hover { text-decoration: underline; }
+    h1 { font-size: 1.35rem; margin-bottom: 8px; }
+    p { color: #555; font-size: 0.9rem; margin-bottom: 24px; }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #ff0000;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    button.secondary {
+      background: #fff;
+      color: #1a1a1a;
+      border: 1px solid #ccc;
+    }
+    button.secondary:hover:not(:disabled) {
+      background: #f5f5f5;
+    }
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .mode-tabs button {
+      flex: 1;
+      background: #fff;
+      color: #1a1a1a;
+      border: 1px solid #ccc;
+    }
+    .mode-tabs button.active {
+      background: #ff0000;
+      color: #fff;
+      border-color: #ff0000;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .actions button { width: auto; flex: 1; }
+    .hint { font-size: 0.8rem; color: #777; margin-top: -8px; margin-bottom: 16px; }
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .status.error { display: block; background: #fde8e8; color: #b00020; }
+    .status.loading { display: block; background: #eef4ff; color: #1a4fb0; }
+    .status.success { display: block; background: #e8f5e9; color: #1b5e20; }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px 0 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .video-list {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      max-height: 420px;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+    .video-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+    .video-item:last-child { border-bottom: none; }
+    .video-item a {
+      color: #1a4fb0;
+      word-break: break-all;
+    }
+    .video-title {
+      display: block;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .hidden { display: none; }
+    .limit-row {
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      gap: 8px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    .limit-row .field { min-width: 0; }
+    .limit-row input { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <nav><a href="/">← Trang tải video</a></nav>
+
+  <h1>Cào kênh / playlist YouTube</h1>
+  <p id="pageDesc">Nhập link kênh để lấy toàn bộ URL video, sau đó chuyển sang trang tải video.</p>
+
+  <div class="mode-tabs">
+    <button type="button" class="active" id="modeChannelBtn">Kênh</button>
+    <button type="button" id="modePlaylistBtn">Playlist</button>
+  </div>
+
+  <form id="form">
+    <label for="sourceUrl" id="sourceLabel">Link kênh YouTube</label>
+    <input id="sourceUrl" type="url" placeholder="https://www.youtube.com/@ten-kenh" required>
+
+    <div class="limit-row">
+      <div class="field">
+        <label for="maxVideos">Giới hạn số video (tùy chọn)</label>
+        <input id="maxVideos" type="number" min="1" placeholder="Để trống = lấy hết">
+      </div>
+    </div>
+
+    <button type="submit" id="scrapeBtn">Cào video từ kênh</button>
+  </form>
+
+  <p class="hint" id="sourceHint">Hỗ trợ: @handle, /channel/UC..., /c/..., /user/...</p>
+
+  <div id="status" class="status"></div>
+
+  <div id="resultSection" class="hidden">
+    <div class="result-header">
+      <span id="resultTitle">Kết quả</span>
+      <span id="resultCount"></span>
+    </div>
+    <div class="actions">
+      <button type="button" class="secondary" id="copyBtn">Sao chép danh sách</button>
+      <button type="button" id="importBtn">Dùng cho tải video</button>
+    </div>
+    <div class="video-list" id="videoList"></div>
+  </div>
+
+  <script src="batch.js"></script>
+  <script src="channel.js"></script>
+</body>
+</html>

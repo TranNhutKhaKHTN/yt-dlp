@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tải đoạn video YouTube</title>
+  <title>Tải video YouTube</title>
   <style>
     * { box-sizing: border-box; }
     body {
       font-family: system-ui, sans-serif;
-      max-width: 560px;
+      max-width: 640px;
       margin: 48px auto;
       padding: 0 16px;
       color: #1a1a1a;
@@ -94,6 +94,22 @@
       color: #b00020;
       border-color: #f5c2c2;
     }
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .mode-tabs button {
+      flex: 1;
+      background: #fff;
+      color: #1a1a1a;
+      border: 1px solid #ccc;
+    }
+    .mode-tabs button.active {
+      background: #ff0000;
+      color: #fff;
+      border-color: #ff0000;
+    }
     .ai-section {
       border: 1px solid #ddd;
       border-radius: 8px;
@@ -160,24 +176,236 @@
     .status.loading { display: block; background: #eef4ff; color: #1a4fb0; }
     .status.success { display: block; background: #e8f5e9; color: #1b5e20; }
     #url { margin-bottom: 16px; }
+    .file-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .file-row input[type="file"] {
+      flex: 1;
+      padding: 8px;
+      font-size: 0.85rem;
+    }
+    .file-row button {
+      width: auto;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+    .url-count {
+      font-size: 0.85rem;
+      color: #1a4fb0;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .hidden { display: none; }
+    #urlList {
+      min-height: 160px;
+      font-size: 0.8rem;
+    }
+    .video-queue {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: #fafafa;
+      overflow: hidden;
+    }
+    .video-queue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .video-queue-summary {
+      font-weight: 500;
+      color: #555;
+    }
+    #videoQueueList {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .video-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+    }
+    .video-item:last-child { border-bottom: none; }
+    .video-item-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .video-index {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #eee;
+      color: #555;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-name {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.82rem;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .video-badge {
+      flex-shrink: 0;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .video-item.status-pending .video-badge { background: #eee; color: #666; }
+    .video-item.status-downloading .video-badge { background: #eef4ff; color: #1a4fb0; }
+    .video-item.status-done .video-badge { background: #e8f5e9; color: #1b5e20; }
+    .video-item.status-error .video-badge { background: #fde8e8; color: #b00020; }
+    .video-item.status-downloading .video-index { background: #eef4ff; color: #1a4fb0; }
+    .video-item.status-done .video-index { background: #e8f5e9; color: #1b5e20; }
+    .video-item.status-error .video-index { background: #fde8e8; color: #b00020; }
+    .video-progress {
+      margin-top: 8px;
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .video-progress-bar {
+      height: 100%;
+      width: 40%;
+      background: #1a4fb0;
+      border-radius: 999px;
+      animation: progress-indeterminate 1.2s ease-in-out infinite;
+    }
+    @keyframes progress-indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+    .video-error {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: #b00020;
+      line-height: 1.3;
+    }
+    .video-item-check {
+      flex-shrink: 0;
+      width: auto;
+      margin: 2px 0 0;
+    }
+    .job-recovery {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      background: #fff8e1;
+    }
+    .job-recovery p {
+      margin: 0 0 10px;
+      color: #6d4c00;
+      font-size: 0.85rem;
+    }
+    .job-recovery-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .job-recovery-actions button {
+      width: auto;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+    .job-recovery-actions button.secondary {
+      background: #fff;
+      color: #1a1a1a;
+      border: 1px solid #ccc;
+    }
+    .queue-select-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 0.8rem;
+      background: #fff;
+    }
+    .queue-select-row input { width: auto; margin: 0; }
+    .queue-select-row label { margin: 0; font-weight: 500; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>Tải đoạn video YouTube</h1>
-  <p>Nhập link video và các phân đoạn cần tải. Nhiều phân đoạn sẽ được tải song song.</p>
+  <nav style="margin-bottom:24px;font-size:0.9rem"><a href="/channel.html" style="color:#1a4fb0;text-decoration:none">Cào kênh / playlist YouTube →</a></nav>
+
+  <h1>Tải video YouTube</h1>
+  <p id="pageDesc">Nhập link video và các phân đoạn cần tải. Nhiều phân đoạn sẽ được tải song song.</p>
+
+  <div class="mode-tabs">
+    <button type="button" class="active" id="modeSegmentBtn">Phân đoạn</button>
+    <button type="button" id="modeFullBtn">Full video</button>
+  </div>
 
   <form id="form">
-    <label for="url">Link video YouTube</label>
-    <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
+    <div id="segmentMode">
+      <label for="url">Link video YouTube</label>
+      <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
 
-    <div class="ai-section">
-      <h2>AI: Prompt &amp; Import</h2>
-      <p class="hint" style="margin-top:0">1. Sao chép prompt → 2. Dán vào AI kèm link → 3. Paste JSON trả về → Import</p>
-      <div class="ai-actions">
-        <button type="button" class="secondary" id="copyPromptBtn">Sao chép prompt mẫu</button>
-        <button type="button" class="secondary" id="importJsonBtn">Import JSON</button>
+      <div class="ai-section">
+        <h2>AI: Prompt &amp; Import</h2>
+        <p class="hint" style="margin-top:0">1. Sao chép prompt → 2. Dán vào AI kèm link → 3. Paste JSON trả về → Import</p>
+        <div class="ai-actions">
+          <button type="button" class="secondary" id="copyPromptBtn">Sao chép prompt mẫu</button>
+          <button type="button" class="secondary" id="importJsonBtn">Import JSON</button>
+        </div>
+        <textarea id="jsonImport" placeholder='Dán JSON từ AI vào đây...'></textarea>
       </div>
-      <textarea id="jsonImport" placeholder='Dán JSON từ AI vào đây...'></textarea>
+
+      <div class="segments-header">
+        <label>Phân đoạn</label>
+        <button type="button" class="secondary" id="addSegmentBtn">+ Thêm phân đoạn</button>
+      </div>
+      <div id="segments"></div>
+      <p class="hint">Định dạng: giây (90) hoặc phút:giây (1:30). Nhiều phân đoạn sẽ được nén thành ZIP.</p>
+    </div>
+
+    <div id="fullMode" class="hidden">
+      <label for="urlList">Danh sách link YouTube</label>
+      <textarea id="urlList" placeholder="Dán link hoặc file .txt / JSON...&#10;&#10;Tên video | https://www.youtube.com/watch?v=...&#10;Hoặc JSON: [{&quot;name&quot;:&quot;Tên&quot;,&quot;url&quot;:&quot;https://...&quot;}]"></textarea>
+      <div class="file-row">
+        <input type="file" id="urlFile" accept=".txt,.json,text/plain,application/json">
+        <button type="button" class="secondary" id="detectUrlsBtn">Detect &amp; lấy tên</button>
+      </div>
+      <div class="url-count" id="urlCount">Chưa có link</div>
+      <div id="videoQueue" class="video-queue hidden">
+        <div class="video-queue-header">
+          <span>Danh sách tải</span>
+          <span class="video-queue-summary" id="videoQueueSummary"></span>
+        </div>
+        <div class="queue-select-row hidden" id="queueSelectRow">
+          <input type="checkbox" id="selectAllDone">
+          <label for="selectAllDone">Chọn tất cả video đã tải xong</label>
+        </div>
+        <ul id="videoQueueList"></ul>
+      </div>
+      <div id="jobRecovery" class="job-recovery hidden">
+        <p id="jobRecoveryText">Các video đã tải vẫn được giữ trên server.</p>
+        <div class="job-recovery-actions">
+          <button type="button" id="retryDownloadBtn">Tải lại file kết quả</button>
+          <button type="button" class="secondary" id="downloadSelectedBtn">Nén &amp; tải video đã chọn</button>
+          <button type="button" class="secondary" id="resumeFailedBtn">Tải lại video lỗi/chưa tải</button>
+          <button type="button" class="secondary" id="dismissJobBtn">Xóa job</button>
+        </div>
+      </div>
+      <p class="hint">Hỗ trợ: <code>Tên | URL</code>, JSON <code>[{name, url}]</code>, hoặc chỉ URL. Tên file: <code>01 - &lt;tên YouTube&gt;.mp4</code> (lấy qua youtubei.js).</p>
     </div>
 
     <label for="resolution">Độ phân giải</label>
@@ -194,13 +422,6 @@
       <label for="fastMode">Tải nhanh (~15s/phút, giới hạn 480p, tải song song)</label>
     </div>
 
-    <div class="segments-header">
-      <label>Phân đoạn</label>
-      <button type="button" class="secondary" id="addSegmentBtn">+ Thêm phân đoạn</button>
-    </div>
-    <div id="segments"></div>
-    <p class="hint">Định dạng: giây (90) hoặc phút:giây (1:30). Nhiều phân đoạn sẽ được nén thành ZIP.</p>
-
     <button type="submit" id="submitBtn">Tải video</button>
   </form>
 
@@ -208,6 +429,7 @@
 
   <script src="prompt.js"></script>
   <script src="import.js"></script>
+  <script src="batch.js"></script>
   <script>
     const form = document.getElementById('form');
     const statusEl = document.getElementById('status');
@@ -217,12 +439,370 @@
     const copyPromptBtn = document.getElementById('copyPromptBtn');
     const importJsonBtn = document.getElementById('importJsonBtn');
     const jsonImportEl = document.getElementById('jsonImport');
+    const modeSegmentBtn = document.getElementById('modeSegmentBtn');
+    const modeFullBtn = document.getElementById('modeFullBtn');
+    const segmentMode = document.getElementById('segmentMode');
+    const fullMode = document.getElementById('fullMode');
+    const urlListEl = document.getElementById('urlList');
+    const urlFileEl = document.getElementById('urlFile');
+    const detectUrlsBtn = document.getElementById('detectUrlsBtn');
+    const urlCountEl = document.getElementById('urlCount');
+    const videoQueueEl = document.getElementById('videoQueue');
+    const videoQueueListEl = document.getElementById('videoQueueList');
+    const videoQueueSummaryEl = document.getElementById('videoQueueSummary');
+    const queueSelectRow = document.getElementById('queueSelectRow');
+    const selectAllDoneEl = document.getElementById('selectAllDone');
+    const jobRecoveryEl = document.getElementById('jobRecovery');
+    const jobRecoveryText = document.getElementById('jobRecoveryText');
+    const retryDownloadBtn = document.getElementById('retryDownloadBtn');
+    const downloadSelectedBtn = document.getElementById('downloadSelectedBtn');
+    const resumeFailedBtn = document.getElementById('resumeFailedBtn');
+    const dismissJobBtn = document.getElementById('dismissJobBtn');
+    const pageDesc = document.getElementById('pageDesc');
+    const urlInput = document.getElementById('url');
 
+    const JOB_STORAGE_KEY = 'videoDlyActiveJob';
     let segmentCount = 0;
+    let currentMode = 'segment';
+    let pollTimer = null;
+    let activeJobId = null;
+    let activeJobSnapshot = null;
+    let selectedDoneIndices = new Set();
+
+    const STATUS_LABELS = {
+      pending: 'Chờ',
+      downloading: 'Đang tải',
+      done: 'Xong',
+      error: 'Lỗi',
+    };
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function getItemBaseTitle(item) {
+      return item.youtubeTitle || item.name || item.url;
+    }
+
+    function toQueueItem(item, index, total) {
+      return {
+        index,
+        url: item.url,
+        name: item.name || null,
+        youtubeTitle: item.youtubeTitle || null,
+        displayName: buildNumberedDisplayName(getItemBaseTitle(item), index, total),
+        status: item.status || 'pending',
+        error: item.error || null,
+        filename: item.filename || null,
+      };
+    }
+
+    let resolvedItems = [];
+
+    async function resolveTitles(items) {
+      if (!items.length) return [];
+
+      const res = await fetch('/api/resolve-titles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Không lấy được tên video');
+      }
+
+      const data = await res.json();
+      return data.items;
+    }
+
+    function renderResolvedQueue(items, summaryText) {
+      resolvedItems = items;
+      renderVideoQueue(
+        items.map((item, i) => toQueueItem(item, i, items.length)),
+        summaryText,
+      );
+    }
+
+    function saveActiveJobId(jobId) {
+      activeJobId = jobId;
+      if (jobId) {
+        sessionStorage.setItem(JOB_STORAGE_KEY, jobId);
+      } else {
+        sessionStorage.removeItem(JOB_STORAGE_KEY);
+      }
+    }
+
+    function getDoneIndices(items) {
+      return items
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => item.status === 'done' && item.downloadable !== false)
+        .map(({ index }) => index);
+    }
+
+    function syncSelectedDoneIndices(items) {
+      const doneIndices = getDoneIndices(items);
+      const doneSet = new Set(doneIndices);
+      selectedDoneIndices = new Set(
+        [...selectedDoneIndices].filter((index) => doneSet.has(index)),
+      );
+      if (!selectedDoneIndices.size && doneIndices.length) {
+        for (const index of doneIndices) selectedDoneIndices.add(index);
+      }
+    }
+
+    function updateRecoveryUI(job) {
+      activeJobSnapshot = job;
+      const downloadable = job.downloadableCount || getDoneIndices(job.items).length;
+      const pendingCount = job.items.filter((item) => item.status !== 'done' && item.status !== 'downloading').length;
+
+      if (downloadable > 0) {
+        jobRecoveryEl.classList.remove('hidden');
+        jobRecoveryText.textContent = `Đã giữ ${downloadable}/${job.total} video trên server. Bạn có thể tải lại file hoặc chọn video để nén mà không cần tải lại từ đầu.`;
+        retryDownloadBtn.disabled = false;
+        downloadSelectedBtn.disabled = false;
+      } else {
+        jobRecoveryEl.classList.add('hidden');
+      }
+
+      resumeFailedBtn.disabled = pendingCount === 0;
+      resumeFailedBtn.textContent = pendingCount > 0
+        ? `Tải lại ${pendingCount} video lỗi/chưa tải`
+        : 'Tải lại video lỗi/chưa tải';
+    }
+
+    function hideRecoveryUI() {
+      jobRecoveryEl.classList.add('hidden');
+      activeJobSnapshot = null;
+    }
+
+    function renderVideoQueue(items, summaryText = '') {
+      if (!items.length) {
+        videoQueueEl.classList.add('hidden');
+        videoQueueListEl.innerHTML = '';
+        videoQueueSummaryEl.textContent = '';
+        queueSelectRow.classList.add('hidden');
+        return;
+      }
+
+      const doneIndices = getDoneIndices(items);
+      syncSelectedDoneIndices(items);
+
+      videoQueueEl.classList.remove('hidden');
+      videoQueueSummaryEl.textContent = summaryText;
+      queueSelectRow.classList.toggle('hidden', doneIndices.length === 0);
+      selectAllDoneEl.checked = doneIndices.length > 0
+        && doneIndices.every((index) => selectedDoneIndices.has(index));
+
+      videoQueueListEl.innerHTML = items.map((item, i) => {
+        const status = item.status || 'pending';
+        const label = STATUS_LABELS[status] || status;
+        const title = item.displayName || item.name || item.url;
+        const canSelect = status === 'done' && item.downloadable !== false;
+
+        return `
+          <li class="video-item status-${status}">
+            <div class="video-item-header">
+              ${canSelect ? `<input type="checkbox" class="video-item-check" data-index="${i}" ${selectedDoneIndices.has(i) ? 'checked' : ''}>` : ''}
+              <span class="video-index">${i + 1}</span>
+              <span class="video-name" title="${escapeHtml(title)}">${escapeHtml(title)}</span>
+              <span class="video-badge">${label}</span>
+            </div>
+            ${status === 'downloading' ? '<div class="video-progress"><div class="video-progress-bar"></div></div>' : ''}
+            ${item.error ? `<div class="video-error">${escapeHtml(item.error)}</div>` : ''}
+          </li>
+        `;
+      }).join('');
+
+      videoQueueListEl.querySelectorAll('.video-item-check').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+          const index = Number(checkbox.dataset.index);
+          if (checkbox.checked) {
+            selectedDoneIndices.add(index);
+          } else {
+            selectedDoneIndices.delete(index);
+          }
+          const currentDone = getDoneIndices(items);
+          selectAllDoneEl.checked = currentDone.length > 0
+            && currentDone.every((idx) => selectedDoneIndices.has(idx));
+        });
+      });
+    }
+
+    function buildQueueSummary(items) {
+      const done = items.filter((item) => item.status === 'done').length;
+      const failed = items.filter((item) => item.status === 'error').length;
+      const downloading = items.filter((item) => item.status === 'downloading').length;
+      const pending = items.filter((item) => item.status === 'pending').length;
+
+      if (downloading || done || failed) {
+        return `${done}/${items.length} xong${failed ? `, ${failed} lỗi` : ''}${downloading ? `, ${downloading} đang tải` : ''}${pending ? `, ${pending} chờ` : ''}`;
+      }
+      return `${items.length} video`;
+    }
+
+    function stopPolling() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function fetchJob(jobId) {
+      const res = await fetch(`/api/jobs/${jobId}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Không thể theo dõi tiến trình');
+      }
+      return res.json();
+    }
+
+    function isJobFinished(job) {
+      return ['done', 'partial', 'error'].includes(job.status);
+    }
+
+    async function pollJobUntilDone(jobId) {
+      let networkRetries = 0;
+
+      while (true) {
+        let job;
+        try {
+          job = await fetchJob(jobId);
+          networkRetries = 0;
+        } catch (err) {
+          networkRetries += 1;
+          if (networkRetries >= 30) {
+            throw new Error(`${err.message || 'Mất kết nối'} — job vẫn được giữ, hãy thử tải lại file.`);
+          }
+          setStatus('loading', `Mất kết nối tạm thời, đang thử lại (${networkRetries}/30)...`);
+          await sleep(2000);
+          continue;
+        }
+
+        renderVideoQueue(job.items, buildQueueSummary(job.items));
+        updateRecoveryUI(job);
+
+        if (job.status === 'zipping') {
+          setStatus('loading', 'Đang nén file ZIP...');
+        } else if (job.status === 'running') {
+          setStatus('loading', `Đang tải ${job.completed}/${job.total} video...`);
+        }
+
+        if (isJobFinished(job)) {
+          if (job.status === 'error' && !job.hasDownloadableFiles) {
+            throw new Error(job.error || 'Tải video thất bại');
+          }
+          return job;
+        }
+
+        await sleep(1000);
+      }
+    }
+
+    function triggerDirectDownload(url) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function buildJobDownloadUrl(jobId, indices = null, cleanup = false) {
+      const params = new URLSearchParams();
+      if (indices && indices.length) {
+        params.set('indices', indices.join(','));
+      }
+      if (cleanup) {
+        params.set('cleanup', '1');
+      }
+      const query = params.toString();
+      return query ? `/api/jobs/${jobId}/download?${query}` : `/api/jobs/${jobId}/download`;
+    }
+
+    function downloadJobResult(jobId, indices = null) {
+      triggerDirectDownload(buildJobDownloadUrl(jobId, indices, false));
+    }
+
+    async function dismissActiveJob() {
+      if (!activeJobId) return;
+
+      await fetch(`/api/jobs/${activeJobId}`, { method: 'DELETE' }).catch(() => {});
+      saveActiveJobId(null);
+      hideRecoveryUI();
+    }
+
+    async function restoreActiveJob() {
+      const savedJobId = sessionStorage.getItem(JOB_STORAGE_KEY);
+      if (!savedJobId) return;
+
+      try {
+        const job = await fetchJob(savedJobId);
+        saveActiveJobId(savedJobId);
+        setMode('full');
+        renderVideoQueue(job.items, buildQueueSummary(job.items));
+        updateRecoveryUI(job);
+
+        if (isJobFinished(job)) {
+          if (job.hasDownloadableFiles) {
+            setStatus('success', `Job trước đó: ${job.completed}/${job.total} video sẵn sàng tải.`);
+          } else {
+            setStatus('error', job.error || 'Job trước đó thất bại.');
+          }
+          return;
+        }
+
+        setStatus('loading', 'Đang tiếp tục theo dõi job trước đó...');
+        pollJobUntilDone(savedJobId).then((finishedJob) => {
+          updateRecoveryUI(finishedJob);
+          setStatus('success', `Job hoàn tất: ${finishedJob.completed}/${finishedJob.total} video sẵn sàng tải.`);
+        }).catch((err) => {
+          setStatus('error', err.message);
+        });
+      } catch {
+        sessionStorage.removeItem(JOB_STORAGE_KEY);
+      }
+    }
 
     function setStatus(type, message) {
       statusEl.className = 'status ' + type;
       statusEl.textContent = message;
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      const isSegment = mode === 'segment';
+      segmentMode.classList.toggle('hidden', !isSegment);
+      fullMode.classList.toggle('hidden', isSegment);
+      modeSegmentBtn.classList.toggle('active', isSegment);
+      modeFullBtn.classList.toggle('active', !isSegment);
+      urlInput.required = isSegment;
+      submitBtn.textContent = isSegment ? 'Tải video' : 'Tải hàng loạt';
+      pageDesc.textContent = isSegment
+        ? 'Nhập link video và các phân đoạn cần tải. Nhiều phân đoạn sẽ được tải song song.'
+        : 'Nhập hoặc import file chứa danh sách video (name + url). Hệ thống tự detect và tải full video về máy.';
+    }
+
+    function updateUrlCount() {
+      const items = parseVideoList(urlListEl.value);
+      if (!items.length) {
+        urlCountEl.textContent = 'Chưa có link';
+        resolvedItems = [];
+        renderVideoQueue([]);
+        return items;
+      }
+
+      urlCountEl.textContent = `Đã detect ${items.length} link — bấm "Detect & lấy tên" để xem tên YouTube`;
+      return items;
     }
 
     function formatStartLabel(index, title) {
@@ -278,8 +858,62 @@
       URL.revokeObjectURL(a.href);
     }
 
+    modeSegmentBtn.addEventListener('click', () => setMode('segment'));
+    modeFullBtn.addEventListener('click', () => setMode('full'));
+
+    urlListEl.addEventListener('input', updateUrlCount);
+
+    urlFileEl.addEventListener('change', async () => {
+      const file = urlFileEl.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        urlListEl.value = text;
+        const items = parseVideoList(text);
+        if (!items.length) {
+          setStatus('error', 'Không tìm thấy link YouTube trong file.');
+          return;
+        }
+
+        setStatus('loading', `Đang lấy tên ${items.length} video từ YouTube...`);
+        const resolved = await resolveTitles(items);
+        urlListEl.value = formatVideoList(resolved);
+        urlCountEl.textContent = `Đã detect ${resolved.length} video (tên từ YouTube)`;
+        renderResolvedQueue(resolved, `${resolved.length} video sẵn sàng tải`);
+        setStatus('success', `Đã detect ${resolved.length} video và lấy tên YouTube.`);
+      } catch (err) {
+        setStatus('error', err.message || 'Không thể đọc file.');
+      } finally {
+        urlFileEl.value = '';
+      }
+    });
+
+    detectUrlsBtn.addEventListener('click', async () => {
+      const items = parseVideoList(urlListEl.value);
+      if (!items.length) {
+        setStatus('error', 'Không tìm thấy link YouTube.');
+        return;
+      }
+
+      detectUrlsBtn.disabled = true;
+      setStatus('loading', `Đang lấy tên ${items.length} video từ YouTube...`);
+
+      try {
+        const resolved = await resolveTitles(items);
+        urlListEl.value = formatVideoList(resolved);
+        urlCountEl.textContent = `Đã detect ${resolved.length} video (tên từ YouTube)`;
+        renderResolvedQueue(resolved, `${resolved.length} video sẵn sàng tải`);
+        setStatus('success', `Đã detect ${resolved.length} video và lấy tên YouTube.`);
+      } catch (err) {
+        setStatus('error', err.message);
+      } finally {
+        detectUrlsBtn.disabled = false;
+      }
+    });
+
     copyPromptBtn.addEventListener('click', async () => {
-      const url = document.getElementById('url').value;
+      const url = urlInput.value;
       const prompt = buildPromptTemplate(url);
       try {
         await navigator.clipboard.writeText(prompt);
@@ -301,7 +935,7 @@
         const data = validateImport(raw);
         segmentCount = 0;
         applyImport(data, {
-          urlInput: document.getElementById('url'),
+          urlInput,
           resolutionSelect: document.getElementById('resolution'),
           fastModeCheckbox: document.getElementById('fastMode'),
           segmentsEl,
@@ -316,41 +950,172 @@
 
     addSegmentBtn.addEventListener('click', () => createSegmentRow());
 
+    selectAllDoneEl.addEventListener('change', () => {
+      if (!activeJobSnapshot) return;
+      const doneIndices = getDoneIndices(activeJobSnapshot.items);
+      selectedDoneIndices = selectAllDoneEl.checked ? new Set(doneIndices) : new Set();
+      renderVideoQueue(activeJobSnapshot.items, buildQueueSummary(activeJobSnapshot.items));
+    });
+
+    retryDownloadBtn.addEventListener('click', () => {
+      if (!activeJobId) return;
+      downloadJobResult(activeJobId);
+      setStatus('success', 'Đang tải file kết quả về máy...');
+    });
+
+    downloadSelectedBtn.addEventListener('click', () => {
+      if (!activeJobId || !activeJobSnapshot) return;
+      const indices = [...selectedDoneIndices];
+      if (!indices.length) {
+        setStatus('error', 'Hãy chọn ít nhất một video đã tải xong.');
+        return;
+      }
+      downloadJobResult(activeJobId, indices);
+      setStatus('success', `Đang nén và tải ${indices.length} video đã chọn...`);
+    });
+
+    resumeFailedBtn.addEventListener('click', async () => {
+      if (!activeJobId) return;
+
+      resumeFailedBtn.disabled = true;
+      setStatus('loading', 'Đang tải lại các video lỗi/chưa tải...');
+
+      try {
+        const res = await fetch(`/api/jobs/${activeJobId}/resume`, { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.error || 'Không thể tiếp tục job');
+        }
+
+        const job = await pollJobUntilDone(activeJobId);
+        updateRecoveryUI(job);
+
+        if (job.hasDownloadableFiles) {
+          downloadJobResult(activeJobId);
+          setStatus('success', `Đã tải thêm xong. Tổng ${job.completed}/${job.total} video sẵn sàng.`);
+        } else {
+          throw new Error(job.error || 'Không tải được video nào');
+        }
+      } catch (err) {
+        if (activeJobSnapshot?.hasDownloadableFiles) {
+          setStatus('error', `${err.message} — Các video đã tải trước đó vẫn được giữ.`);
+        } else {
+          setStatus('error', err.message);
+        }
+      } finally {
+        resumeFailedBtn.disabled = false;
+      }
+    });
+
+    dismissJobBtn.addEventListener('click', async () => {
+      await dismissActiveJob();
+      selectedDoneIndices = new Set();
+      setStatus('success', 'Đã xóa job và dữ liệu tạm trên server.');
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const segments = getSegments();
-      const url = document.getElementById('url').value;
 
       submitBtn.disabled = true;
       addSegmentBtn.disabled = true;
-      setStatus('loading', `Đang tải ${segments.length} phân đoạn song song...`);
 
       try {
-        const res = await fetch('/api/download-batch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url,
-            segments,
-            resolution: document.getElementById('resolution').value,
-            fastMode: document.getElementById('fastMode').checked,
-          }),
-        });
+        if (currentMode === 'segment') {
+          const segments = getSegments();
+          const url = urlInput.value;
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || 'Tải video thất bại');
+          setStatus('loading', `Đang tải ${segments.length} phân đoạn song song...`);
+
+          const res = await fetch('/api/download-batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url,
+              segments,
+              resolution: document.getElementById('resolution').value,
+              fastMode: document.getElementById('fastMode').checked,
+            }),
+          });
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || 'Tải video thất bại');
+          }
+
+          const blob = await res.blob();
+          const disposition = res.headers.get('Content-Disposition') || '';
+          const match = disposition.match(/filename="?([^"]+)"?/);
+          const filename = match ? match[1] : 'video.mp4';
+
+          saveFile(blob, filename);
+          setStatus('success', `Tải xong! File đã lưu vào Downloads (${filename}).`);
+        } else {
+          stopPolling();
+
+          let items = resolvedItems.length
+            ? resolvedItems
+            : parseVideoList(urlListEl.value);
+          if (!items.length) {
+            throw new Error('Không tìm thấy link YouTube hợp lệ');
+          }
+
+          if (!items[0]?.youtubeTitle) {
+            setStatus('loading', `Đang lấy tên ${items.length} video từ YouTube...`);
+            items = await resolveTitles(items);
+            resolvedItems = items;
+          }
+
+          const queueItems = items.map((item, i) => toQueueItem(item, i, items.length));
+          renderVideoQueue(queueItems, `${items.length} video — bắt đầu tải...`);
+          setStatus('loading', `Đang khởi tạo tải ${items.length} video...`);
+
+          detectUrlsBtn.disabled = true;
+          urlFileEl.disabled = true;
+          urlListEl.disabled = true;
+
+          const startRes = await fetch('/api/download-full-batch/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items,
+              resolution: document.getElementById('resolution').value,
+              fastMode: document.getElementById('fastMode').checked,
+            }),
+          });
+
+          if (!startRes.ok) {
+            const data = await startRes.json().catch(() => ({}));
+            throw new Error(data.error || 'Không thể bắt đầu tải');
+          }
+
+          const { jobId } = await startRes.json();
+          saveActiveJobId(jobId);
+          const job = await pollJobUntilDone(jobId);
+          updateRecoveryUI(job);
+
+          if (job.hasDownloadableFiles) {
+            downloadJobResult(jobId);
+            const failedText = job.failed ? ` (${job.failed} video lỗi)` : '';
+            const partialText = job.status === 'partial' ? ' — nén ZIP thất bại, hãy dùng "Nén & tải video đã chọn"' : '';
+            setStatus('success', `Tải xong ${job.completed}/${job.total} video${failedText}! Đang tải file về máy...${partialText}`);
+          } else {
+            throw new Error(job.error || 'Tải video thất bại');
+          }
+
+          detectUrlsBtn.disabled = false;
+          urlFileEl.disabled = false;
+          urlListEl.disabled = false;
         }
-
-        const blob = await res.blob();
-        const disposition = res.headers.get('Content-Disposition') || '';
-        const match = disposition.match(/filename="?([^"]+)"?/);
-        const filename = match ? match[1] : 'video.mp4';
-
-        saveFile(blob, filename);
-        setStatus('success', `Tải xong! File đã lưu vào Downloads (${filename}).`);
       } catch (err) {
-        setStatus('error', err.message);
+        if (activeJobId && activeJobSnapshot?.hasDownloadableFiles) {
+          updateRecoveryUI(activeJobSnapshot);
+          setStatus('error', `${err.message} — Các video đã tải vẫn được giữ, bạn có thể tải lại hoặc chọn video để nén.`);
+        } else {
+          setStatus('error', err.message);
+        }
+        detectUrlsBtn.disabled = false;
+        urlFileEl.disabled = false;
+        urlListEl.disabled = false;
       } finally {
         submitBtn.disabled = false;
         addSegmentBtn.disabled = false;
@@ -358,6 +1123,35 @@
     });
 
     createSegmentRow('0:30', '1:30');
+
+    async function importFromChannelPage() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('import') !== 'channel') return;
+
+      const raw = sessionStorage.getItem('videoDlyChannelImport');
+      sessionStorage.removeItem('videoDlyChannelImport');
+      if (!raw) return;
+
+      let items;
+      try {
+        items = JSON.parse(raw);
+      } catch {
+        return;
+      }
+
+      if (!Array.isArray(items) || !items.length) return;
+
+      setMode('full');
+      urlListEl.value = formatVideoList(items);
+      urlCountEl.textContent = `Đã import ${items.length} video từ kênh`;
+      renderResolvedQueue(items, `${items.length} video sẵn sàng tải`);
+      setStatus('success', `Đã import ${items.length} video từ trang cào kênh.`);
+
+      window.history.replaceState({}, '', '/');
+    }
+
+    importFromChannelPage();
+    restoreActiveJob();
   </script>
 </body>
 </html>
